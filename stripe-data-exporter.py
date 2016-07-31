@@ -22,15 +22,6 @@ cur = conn.cursor()
 
 stripe.api_key = args.apiKey
 
-if args.fromInvoice is None:
-    cur.execute("TRUNCATE TABLE subscription")
-    cur.execute("TRUNCATE TABLE line_item")
-    cur.execute("TRUNCATE TABLE refund")
-    cur.execute("TRUNCATE TABLE charge")
-    # cur.execute("TRUNCATE TABLE plan")
-    cur.execute("TRUNCATE TABLE invoice")
-    conn.commit()
-
 
 def map_func(value):
     if value is None:
@@ -52,6 +43,19 @@ def add_to_sql(dict_to_add):
         print("Error in query: {}".format(sql))
         raise
 
+
+if args.fromInvoice is None:
+    cur.execute("TRUNCATE TABLE subscription")
+    cur.execute("TRUNCATE TABLE line_item")
+    cur.execute("TRUNCATE TABLE refund")
+    cur.execute("TRUNCATE TABLE charge")
+    cur.execute("TRUNCATE TABLE plan")
+    cur.execute("TRUNCATE TABLE invoice")
+    conn.commit()
+
+    plan_list = stripe.Plan.list(limit=100)
+    for plan in plan_list.auto_paging_iter():
+        add_to_sql(plan)
 
 if args.fromInvoice is None:
     invoices = stripe.Invoice.list(limit=100, expand=['data.charge'])
